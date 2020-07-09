@@ -1,34 +1,86 @@
+import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.StdStats;
+
+
+/**
+ * The type Percolation stats.
+ */
 public class PercolationStats {
+  private static final double CONFIDENCE_95 = 1.96;
+  private final double[] stat;
+  private final int mtrails;
 
-  //perform independent trails of on an n-by-n grid
+  /**
+   * Instantiates a new Percolation stats.
+   *
+   * @param n      the n
+   * @param trails the trails
+   */
   public PercolationStats(int n, int trails) {
-    if (n <= 0 || trails <= 0)
+    if (n <= 0 || trails <= 0) {
       throw new IllegalArgumentException("Wrong argument");
+    }
+
+    stat = new double[trails];
+    mtrails = trails;
+    int squareN = n * n;
+    for (int i = 0; i < mtrails; i++) {
+      Percolation percolation = new Percolation(n);
+      while (!percolation.percolates()) {
+        int randRow = StdRandom.uniform(n);
+        int randCol = StdRandom.uniform(n);
+        percolation.open(randRow + 1, randCol + 1);
+      }
+      stat[i] = percolation.numberOfOpenSites() / (double) squareN;
+    }
   }
 
-  // test client
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   */
   public static void main(String[] args) {
-
+    PercolationStats percolationStats = new PercolationStats(64, 150);
+    System.out.printf("mean = %f%n", percolationStats.mean());
+    System.out.printf("stddev = %f%n", percolationStats.stddev());
+    System.out.printf("95%% confidence interval = [%f, %f]%n",
+            percolationStats.confidenceLo(), percolationStats.confidenceHi());
   }
 
-  // sample mean of percolation threshold
+  /**
+   * Mean double.
+   *
+   * @return the double
+   */
   public double mean() {
-    return 0;
+    return StdStats.mean(stat);
   }
 
-  // sample standard deviation of percolation threshold
+  /**
+   * Stddev double.
+   *
+   * @return the double
+   */
   public double stddev() {
-    return 0;
+    return StdStats.stddev(stat);
   }
 
-  // low endpoint of 95% confidence interval
+  /**
+   * Confidence lo double.
+   *
+   * @return the double
+   */
   public double confidenceLo() {
-    return 0;
+    return mean() - (CONFIDENCE_95 * stddev()) / Math.sqrt(mtrails);
   }
 
-  // high endpoint of 95% confidence interval
+  /**
+   * Confidence hi double.
+   *
+   * @return the double
+   */
   public double confidenceHi() {
-
-    return 0;
+    return mean() + (CONFIDENCE_95 * stddev()) / Math.sqrt(mtrails);
   }
 }
