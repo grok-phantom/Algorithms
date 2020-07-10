@@ -1,37 +1,40 @@
+import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
-
 
 /**
  * The type Percolation stats.
  */
 public class PercolationStats {
   private static final double CONFIDENCE_95 = 1.96;
-  private final double[] stat;
-  private final int mtrails;
+  private final int trialCount;
+  private final double[] trialResults;
+
 
   /**
    * Instantiates a new Percolation stats.
    *
    * @param n      the n
-   * @param trails the trails
+   * @param trials the trials
    */
-  public PercolationStats(int n, int trails) {
-    if (n <= 0 || trails <= 0) {
-      throw new IllegalArgumentException("Wrong argument");
+  public PercolationStats(int n, int trials) {
+    if (n <= 0 || trials <= 0) {
+      throw new IllegalArgumentException("N and T must be <= 0");
     }
+    int gridSize = n;
+    trialCount = trials;
+    trialResults = new double[trialCount];
 
-    stat = new double[trails];
-    mtrails = trails;
-    int squareN = n * n;
-    for (int i = 0; i < mtrails; i++) {
-      Percolation percolation = new Percolation(n);
+    for (int trial = 0; trial < trialCount; trial++) {
+      Percolation percolation = new Percolation(gridSize);
       while (!percolation.percolates()) {
-        int randRow = StdRandom.uniform(n);
-        int randCol = StdRandom.uniform(n);
-        percolation.open(randRow + 1, randCol + 1);
+        int row = StdRandom.uniform(1, gridSize + 1);
+        int col = StdRandom.uniform(1, gridSize + 1);
+        percolation.open(row, col);
       }
-      stat[i] = percolation.numberOfOpenSites() / (double) squareN;
+      int openSites = percolation.numberOfOpenSites();
+      double result = (double) openSites / (gridSize * gridSize);
+      trialResults[trial] = result;
     }
   }
 
@@ -41,11 +44,17 @@ public class PercolationStats {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    PercolationStats percolationStats = new PercolationStats(64, 150);
-    System.out.printf("mean = %f%n", percolationStats.mean());
-    System.out.printf("stddev = %f%n", percolationStats.stddev());
-    System.out.printf("95%% confidence interval = [%f, %f]%n",
-            percolationStats.confidenceLo(), percolationStats.confidenceHi());
+    int gridSize = 10;
+    int trialCount = 10;
+    if (args.length >= 2) {
+      gridSize = Integer.parseInt(args[0]);
+      trialCount = Integer.parseInt(args[1]);
+    }
+    PercolationStats ps = new PercolationStats(gridSize, trialCount);
+
+    StdOut.printf("mean                    = %f%n", ps.mean());
+    StdOut.printf("stddev                  = %f%n", ps.stddev());
+    StdOut.printf("95%% confidence interval = [%f, %f]%n", ps.confidenceLo(), ps.confidenceHi());
   }
 
   /**
@@ -54,7 +63,7 @@ public class PercolationStats {
    * @return the double
    */
   public double mean() {
-    return StdStats.mean(stat);
+    return StdStats.mean(trialResults);
   }
 
   /**
@@ -63,7 +72,7 @@ public class PercolationStats {
    * @return the double
    */
   public double stddev() {
-    return StdStats.stddev(stat);
+    return StdStats.stddev(trialResults);
   }
 
   /**
@@ -72,7 +81,8 @@ public class PercolationStats {
    * @return the double
    */
   public double confidenceLo() {
-    return mean() - (CONFIDENCE_95 * stddev()) / Math.sqrt(mtrails);
+    return mean() - ((CONFIDENCE_95 * stddev()) / Math.sqrt(trialCount));
+
   }
 
   /**
@@ -81,6 +91,6 @@ public class PercolationStats {
    * @return the double
    */
   public double confidenceHi() {
-    return mean() + (CONFIDENCE_95 * stddev()) / Math.sqrt(mtrails);
+    return mean() + ((CONFIDENCE_95 * stddev()) / Math.sqrt(trialCount));
   }
 }
