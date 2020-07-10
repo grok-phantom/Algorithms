@@ -52,7 +52,7 @@ public class Percolation {
       return;
     }
 
-    grid[row - 1][col - 1] = State.OPEN;
+    grid[row - 1][col - 1] = (row-1 == 0) ? State.FULL :State.OPEN;
     countOpen += 1;
 
     addUnion(row, col, -1, 0);
@@ -73,7 +73,7 @@ public class Percolation {
       throw new IllegalArgumentException();
     }
 
-    return grid[row - 1][col - 1] == State.OPEN;
+    return grid[row - 1][col - 1] != State.BLOCKED;
   }
 
   /**
@@ -118,6 +118,7 @@ public class Percolation {
     if (validate(newRow, newCol) && isOpen(newRow, newCol)) {
       weightedQuickUnionUF.union((row - 1) * grid.length + col - 1,
               (newRow - 1) * grid.length + newCol - 1);
+      int rootNewSite = weightedQuickUnionUF.find((newRow-1)*grid.length + newCol -1);
     }
   }
 
@@ -138,13 +139,17 @@ public class Percolation {
 
   private enum State {
     /**
-     * Blocked m state.
+     * Blocked state.
      */
     BLOCKED,
     /**
-     * Open m state.
+     * Open state.
      */
-    OPEN
+    OPEN,
+    /**
+     *  Full state.
+     */
+    FULL
   }
 }
 
