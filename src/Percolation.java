@@ -4,7 +4,8 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
  * The type Percolation.
  */
 public class Percolation {
-  private final State[][] grid;
+  private final State[] grid;
+  private final int nn;
   private final WeightedQuickUnionUF weightedQuickUnionUF;
   private int countOpen = 0;
 
@@ -17,11 +18,12 @@ public class Percolation {
     if (n <= 0) {
       throw new IllegalArgumentException();
     }
-    grid = new State[n][n];
+    grid = new State[n * n];
+    nn = n;
     weightedQuickUnionUF = new WeightedQuickUnionUF(n * n);
     for (int i = 0; i < n; ++i) {
       for (int j = 0; j < n; j++) {
-        grid[i][j] = State.BLOCKED;
+        grid[i * n + j] = State.BLOCKED;
       }
     }
   }
@@ -33,9 +35,17 @@ public class Percolation {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    int n = 10;
-    Percolation percolation = new Percolation(n);
-    System.out.println(percolation.percolates());
+    int n = 3;
+    byte a = 8;
+    System.out.println(a&0x4);
+//    Percolation percolation = new Percolation(n);
+//    percolation.open(1, 2);
+//    System.out.println(percolation.percolates());
+//    percolation.open(2, 3);
+//    percolation.open(2, 2);
+//    System.out.println(percolation.percolates());
+//    percolation.open(3, 2);
+//    System.out.println(percolation.percolates());
   }
 
   /**
@@ -52,7 +62,7 @@ public class Percolation {
       return;
     }
 
-    grid[row - 1][col - 1] = (row-1 == 0) ? State.FULL :State.OPEN;
+    grid[toPt(row, col)] = (row - 1 == 0) ? State.FULL : State.OPEN;
     countOpen += 1;
 
     addUnion(row, col, -1, 0);
@@ -73,7 +83,7 @@ public class Percolation {
       throw new IllegalArgumentException();
     }
 
-    return grid[row - 1][col - 1] != State.BLOCKED;
+    return grid[toPt(row, col)] != State.BLOCKED;
   }
 
   /**
@@ -90,13 +100,8 @@ public class Percolation {
     if (!isOpen(row, col)) {
       return false;
     }
-    for (int i = 0; i < grid.length; ++i) {
-      if (isOpen(1, i + 1) && weightedQuickUnionUF.find(i) == weightedQuickUnionUF.find(
-              (row - 1) * grid.length + col - 1)) {
-        return true;
-      }
-    }
-    return false;
+    int root = weightedQuickUnionUF.find(toPt(row, col));
+    return grid[root] == State.FULL;
   }
 
   /**
@@ -109,17 +114,27 @@ public class Percolation {
   }
 
   private boolean validate(int row, int col) {
-    return row > 0 && row <= grid.length && col > 0 && col <= grid.length;
+    return row > 0 && row <= nn && col > 0 && col <= nn;
   }
 
   private void addUnion(int row, int col, int rowShift, int colShift) {
     int newRow = row + rowShift;
     int newCol = col + colShift;
+    int pt = toPt(row, col);
+    int newPt = toPt(newRow, newCol);
     if (validate(newRow, newCol) && isOpen(newRow, newCol)) {
-      weightedQuickUnionUF.union((row - 1) * grid.length + col - 1,
-              (newRow - 1) * grid.length + newCol - 1);
-      int rootNewSite = weightedQuickUnionUF.find((newRow-1)*grid.length + newCol -1);
+      int rootNewSite = weightedQuickUnionUF.find(newPt);
+      if (grid[pt] == State.FULL && grid[rootNewSite] != State.FULL) {
+        grid[rootNewSite] = State.FULL;
+      } else if (grid[pt] != State.FULL && grid[rootNewSite] == State.FULL) {
+        grid[pt] = State.FULL;
+      }
+      weightedQuickUnionUF.union(pt, newPt);
     }
+  }
+
+  private int toPt(int row, int col) {
+    return (row - 1) * nn + col - 1;
   }
 
   /**
@@ -128,8 +143,8 @@ public class Percolation {
    * @return the boolean
    */
   public boolean percolates() {
-    for (int i = 0; i < grid.length; ++i) {
-      if (isFull(grid.length, i + 1)) {
+    for (int i = 0; i < nn; ++i) {
+      if (isFull(nn, i + 1)) {
         return true;
       }
     }
@@ -147,7 +162,7 @@ public class Percolation {
      */
     OPEN,
     /**
-     *  Full state.
+     * Full state.
      */
     FULL
   }
