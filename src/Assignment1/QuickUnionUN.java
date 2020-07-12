@@ -1,3 +1,5 @@
+package Assignment1;
+
 public class QuickUnionUN {
   private final int[] id;
   private int[] sz;

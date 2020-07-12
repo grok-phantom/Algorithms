@@ -1,3 +1,5 @@
+package Assignment1;
+
 public class QuickFindUF {
   private final int[] id;
 
